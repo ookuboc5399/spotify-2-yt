@@ -1,4 +1,4 @@
-import { ChevronDownIcon } from "@heroicons/react/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { shuffle } from "lodash";
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -29,7 +29,7 @@ function Center() {
   }, [playlist]);
 
   useEffect(() => {
-    spotifyApi.getPlaylist(playlistId).then(
+    spotifyApi && spotifyApi.getPlaylist(playlistId).then(
       function (data) {
         console.log("Some information about this playlist", data.body);
         setPlaylist(data.body);

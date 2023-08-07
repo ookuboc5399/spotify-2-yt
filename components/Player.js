@@ -1,16 +1,14 @@
 import {
   HeartIcon,
-  VolumeUpIcon as VolumeDownIcon,
-} from "@heroicons/react/outline";
-import {
-  FastForwardIcon,
+  ForwardIcon,
   PauseIcon,
+  ArrowUturnLeftIcon,
   PlayIcon,
-  ReplyIcon,
-  RewindIcon,
-  VolumeUpIcon,
-  SwitchHorizontalIcon,
-} from "@heroicons/react/solid";
+  BackwardIcon,
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
+  ArrowsRightLeftIcon,
+} from "@heroicons/react/24/solid";
 import { debounce } from "lodash";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
@@ -47,7 +45,7 @@ function Player() {
 
   // Fetch the song on first load before any song has been loaded...
   useEffect(() => {
-    if (spotifyApi.getAccessToken() && !currentTrackId) {
+    if (spotifyApi && spotifyApi.getAccessToken() && !currentTrackId) {
       fetchCurrentSong();
       setVolume(50);
     }
@@ -73,7 +71,7 @@ function Player() {
 
   const debouncedAdjustVolume = useCallback(
     debounce((volume) => {
-      spotifyApi.setVolume(volume);
+      spotifyApi && spotifyApi.setVolume(volume);
     }, 500),
     []
   );
@@ -94,27 +92,27 @@ function Player() {
       </div>
 
       <div className="flex items-center justify-evenly">
-        <SwitchHorizontalIcon className="button" />
-        <RewindIcon
+        <ArrowsRightLeftIcon className="w-5 h-5 cursor-pointer hover:scale-125 transition transform duration-100 ease-out" />
+        <BackwardIcon
           // onClick={() => spotifyApi.skipToPrevious()} -- The API is not working
-          className="button"
+          className="w-5 h-5 cursor-pointer hover:scale-125 transition "
         />
         {isPlaying ? (
-          <PauseIcon className="button w-10 h-10" onClick={handlePlayPause} />
+          <PauseIcon className="cursor-pointer hover:scale-125 transition transform duration-100 ease-out w-10 h-10" onClick={handlePlayPause} />
         ) : (
-          <PlayIcon onClick={handlePlayPause} className="button w-10 h-10" />
+          <PlayIcon onClick={handlePlayPause} className="cursor-pointer hover:scale-125 transition transform duration-100 ease-out w-10 h-10" />
         )}
-        <FastForwardIcon
+        <ForwardIcon
           // onClick={() => spotifyApi.skipToNext()} -- The API is not working
-          className="button"
+          className="w-5 h-5 cursor-pointer hover:scale-125 transition transform duration-100 ease-out"
         />
-        <ReplyIcon className="button" />
+        <ArrowUturnLeftIcon className="w-5 h-5 cursor-pointer hover:scale-125 transition transform duration-100 ease-out" />
       </div>
 
       <div className="flex items-center space-x-3 md:space-x-4 justify-end pr-5">
-        <VolumeDownIcon
+        <SpeakerXMarkIcon
           onClick={() => volume > 0 && setVolume(volume - 10)}
-          className="button"
+          className="w-5 h-5 cursor-pointer hover:scale-125 transition transform duration-100 ease-out"
         />
         <input
           type="range"
@@ -125,9 +123,9 @@ function Player() {
           max={100}
         />
 
-        <VolumeUpIcon
+        <SpeakerWaveIcon
           onClick={() => volume < 100 && setVolume(volume + 10)}
-          className="button"
+          className="w-5 h-5 cursor-pointer hover:scale-125 transition transform duration-100 ease-out"
         />
       </div>
     </div>

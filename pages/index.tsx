@@ -5,6 +5,8 @@ import Player from "../components/Player";
 import Sidebar from "../components/Sidebar";
 
 const Home: NextPage = () => {
+  const { data: session, status } = useSession();
+  
   return (
     <div className="bg-black h-screen overflow-hidden">
       <main className="overflow-hidden scrollbar-hide flex">
@@ -20,3 +22,10 @@ const Home: NextPage = () => {
 }
 
 export default Home
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+  return {
+    props: { session },
+  };
+}
