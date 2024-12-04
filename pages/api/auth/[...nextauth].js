@@ -13,11 +13,11 @@ async function refreshAccessToken(token) {
     return {
       ...token,
       accessToken: refreshedToken.access_token,
-      accessTokenExpires: Date.now() + refreshedToken.expires_in * 1000, // = 1 hour as 3600 returns from spotify API
-      refreshToken: refreshedToken.refresh_token ?? token.refreshToken, // Replace if new one came back elese fall back to old refresh token
+      accessTokenExpires: Date.now() + refreshedToken.expires_in * 1000, // Spotify API returns expires_in in seconds
+      refreshToken: refreshedToken.refresh_token ?? token.refreshToken, // Use the new refresh token if available
     };
   } catch (error) {
-    console.log(error);
+    console.error("Error refreshing access token:", error);
 
     return {
       ...token,
@@ -30,7 +30,7 @@ export default NextAuth({
   providers: [
     SpotifyProvider({
       clientId: process.env.NEXT_PUBLIC_CLIENT_ID,
-      clientSecret:process.env.NEXT_PUBLIC_CLIENT_SECRET,
+      clientSecret: process.env.NEXT_PUBLIC_CLIENT_SECRET,
       authorization: LOGIN_URL,
     }),
   ],
@@ -40,32 +40,32 @@ export default NextAuth({
   },
   callbacks: {
     async jwt({ token, account, user }) {
-      // Initial sign in...
+      // Initial sign in
       if (account && user) {
         return {
           ...token,
           accessToken: account.access_token,
           refreshToken: account.refresh_token,
           username: account.providerAccountId,
-          accessTokenExpires: account.expires_at * 1000, // we are handling expiry times in Milliseconds hence * 1000
+          accessTokenExpires: account.expires_at * 1000, // expires_at is in seconds
         };
       }
 
-      // 前に発行したアクセストークンの有効期限が切れていなかった場合
+      // Return previous token if access token has not expired
       if (Date.now() < token.accessTokenExpires) {
         console.log("EXISTING ACCESS TOKEN IS VALID");
         return token;
       }
 
-      // 前に発行したアクセストークンの有効期限が切れていた場合
+      // Access token has expired, refresh it
       console.log("ACCESS TOKEN HAS EXPIRED, REFRESHING...");
       return await refreshAccessToken(token);
     },
-
     async session({ session, token }) {
       session.user.accessToken = token.accessToken;
       session.user.refreshToken = token.refreshToken;
       session.user.username = token.username;
+      session.error = token.error; // Include error information if available
 
       return session;
     },

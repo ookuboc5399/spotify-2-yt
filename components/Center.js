@@ -24,20 +24,27 @@ function Center() {
   const [playlist, setPlaylist] = useRecoilState(playlistState);
   const [color, setColor] = useState(null);
 
+  // Randomly set the background color when the playlist changes
   useEffect(() => {
     setColor(shuffle(colors).pop());
   }, [playlist]);
 
+  // Fetch playlist data when playlistId changes
   useEffect(() => {
-    spotifyApi && spotifyApi.getPlaylist(playlistId).then(
-      function (data) {
-        console.log("Some information about this playlist", data.body);
+    if (!spotifyApi || !playlistId) {
+      console.error("Spotify API instance or playlist ID is missing");
+      return;
+    }
+
+    spotifyApi
+      .getPlaylist(playlistId)
+      .then((data) => {
+        console.log("Playlist data fetched successfully:", data.body);
         setPlaylist(data.body);
-      },
-      function (err) {
-        console.log("Something went wrong!", err);
-      }
-    );
+      })
+      .catch((err) => {
+        console.error("Error fetching playlist data:", err);
+      });
   }, [spotifyApi, playlistId]);
 
   return (
@@ -49,30 +56,31 @@ function Center() {
         >
           <img
             className="rounded-full w-10 h-10"
-            src={session?.user.image}
-            alt=""
+            src={session?.user.image || "/default-avatar.png"} // Add a default image if session image is missing
+            alt="User Avatar"
           />
-          <h2>{session?.user.name}</h2>
+          <h2>{session?.user.name || "User"}</h2>
           <ChevronDownIcon className="h-5 w-5" />
         </div>
       </header>
 
       <section
-        className={`flex items-end space-x-7 bg-gradient-to-b ${color} from to-black h-80 text-white p-8`}
+        className={`flex items-end space-x-7 bg-gradient-to-b ${color} to-black h-80 text-white p-8`}
       >
         <img
-          src={playlist?.images?.[0]?.url}
+          src={playlist?.images?.[0]?.url || "/default-playlist.png"} // Add a default image if playlist image is missing
           className="h-44 w-44 shadow-2xl"
+          alt="Playlist Cover"
         />
         <div>
           <p>PLAYLIST</p>
           <h1 className="text-2xl md:text-3xl xl:text-5xl font-bold">
-            {playlist?.name}
+            {playlist?.name || "No Playlist Selected"}
           </h1>
         </div>
       </section>
 
-      <div className="">
+      <div>
         <Songs />
       </div>
     </div>

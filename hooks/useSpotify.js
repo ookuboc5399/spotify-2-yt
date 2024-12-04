@@ -13,12 +13,19 @@ function useSpotify() {
 
   useEffect(() => {
     if (session) {
-      // If refresh access token attempt fails, direct user to login...
-      if (session.error === "RefreshAccessTokenError") {
-        signIn(); // Force sign in to hopefully resolve error
+      try {
+        if (session.error === "RefreshAccessTokenError") {
+          console.warn("RefreshAccessTokenError: Redirecting to sign in.");
+          signIn();
+        } else if (session.user?.accessToken) {
+          spotifyApi.setAccessToken(session.user.accessToken);
+          console.log("Access token set for Spotify API");
+        } else {
+          console.error("No access token available in session.");
+        }
+      } catch (error) {
+        console.error("Error setting access token:", error);
       }
-
-      spotifyApi.setAccessToken(session.user.accessToken);
     }
   }, [session]);
 

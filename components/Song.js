@@ -1,20 +1,58 @@
 import useSpotify from "../hooks/useSpotify";
 import { millisToMinutesAndSeconds } from "../lib/time";
 import { currentTrackIdState, isPlayingState } from "../atoms/songAtom";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 
 function Song({ track, order }) {
   const spotifyApi = useSpotify();
   const [currentTrackId, setCurrentTrackId] =
     useRecoilState(currentTrackIdState);
-  const [sPlaying, setIsPlaying] = useRecoilState(isPlayingState);
+  const [isPlaying, setIsPlaying] = useRecoilState(isPlayingState);
 
   const playSong = async () => {
-    setCurrentTrackId(track.track.id);
-    setIsPlaying(true);
-    spotifyApi.play({
-      uris: [track.track.uri],
-    });
+    try {
+      const playbackState = await spotifyApi.getMyCurrentPlaybackState();
+
+      if (!playbackState?.body?.device) {
+        // アクティブなデバイスがない場合のメッセージ
+        alert(
+          "Spotifyアプリが起動していること、またはアクティブなデバイスが選択されていることを確認してください。"
+        );
+        // デバイス一覧を取得して通知
+        const devicesResponse = await spotifyApi.getMyDevices();
+        const devices = devicesResponse.body.devices;
+
+        if (devices.length === 0) {
+          alert(
+            "利用可能なデバイスが見つかりません。Spotifyアプリを起動してログインしてください。"
+          );
+        } else {
+          alert(
+            `利用可能なデバイスがありますが、選択されていません:\n${devices
+              .map((device) => `- ${device.name}`)
+              .join("\n")}\n\nSpotifyアプリでデバイスを選択してください。`
+          );
+        }
+        return;
+      }
+
+      setCurrentTrackId(track.track.id);
+      setIsPlaying(true);
+
+      // 曲の再生
+      await spotifyApi.play({
+        uris: [track.track.uri],
+      });
+    } catch (error) {
+      console.error("Error playing song:", error);
+      if (error.body?.error?.reason === "NO_ACTIVE_DEVICE") {
+        alert(
+          "再生するにはアクティブなSpotifyデバイスが必要です。Spotifyアプリが実行中であることを確認してください。"
+        );
+      } else {
+        alert("曲を再生できませんでした。エラーの詳細を確認してください。");
+      }
+    }
   };
 
   return (
@@ -37,7 +75,6 @@ function Song({ track, order }) {
 
       <div className="flex items-center justify-between ml-auto md:ml-0">
         <p className="w-40 hidden md:inline-grid">{track.track.album.name}</p>
-
         <p>{millisToMinutesAndSeconds(track.track.duration_ms)}</p>
       </div>
     </div>
